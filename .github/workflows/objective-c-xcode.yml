@@ -16,8 +16,17 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_16.4.app
+      # เช็ค Xcode ที่มีใน runner ก่อน
+      - name: List available Xcode versions
+        run: ls /Applications/ | grep Xcode
+
+      # ใช้ Xcode ล่าสุดที่มีใน runner อัตโนมัติ
+      - name: Select latest Xcode
+        run: |
+          XCODE=$(ls /Applications/ | grep "^Xcode" | sort -V | tail -n 1)
+          echo "Using: $XCODE"
+          sudo xcode-select -s /Applications/$XCODE
+          xcodebuild -version
 
       - name: List schemes
         run: xcodebuild -list -project ThreeOneOSFive.xcodeproj
