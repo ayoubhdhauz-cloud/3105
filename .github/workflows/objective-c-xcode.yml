@@ -16,9 +16,6 @@ jobs:
         with:
           submodules: recursive
 
-      - name: List available Xcode versions
-        run: ls /Applications/ | grep Xcode
-
       - name: Select latest Xcode
         run: |
           XCODE=$(ls /Applications/ | grep "^Xcode" | sort -V | tail -n 1)
@@ -26,16 +23,28 @@ jobs:
           sudo xcode-select -s /Applications/$XCODE
           xcodebuild -version
 
+      # เช็คชื่อ scheme จริงๆ
       - name: List schemes
         run: xcodebuild -list -project ThreeOneOSFive.xcodeproj
 
-      # Build แบบเห็น error ชัดๆ ไม่ใช้ xcpretty
+      # ดึงชื่อ scheme แรกที่มีอยู่จริง แล้ว build
       - name: Build unsigned .app
         run: |
           set -o pipefail
+
+          # ดึงชื่อ scheme อัตโนมัติ
+          SCHEME=$(xcodebuild -list -project ThreeOneOSFive.xcodeproj 2>/dev/null \
+            | awk '/Schemes:/,0' \
+            | grep -v "Schemes:" \
+            | grep -v "^$" \
+            | head -n 1 \
+            | xargs)
+
+          echo "==> ใช้ scheme: '$SCHEME'"
+
           xcodebuild build \
             -project ThreeOneOSFive.xcodeproj \
-            -scheme ThreeOneOSFive \
+            -scheme "$SCHEME" \
             -sdk iphoneos \
             -configuration Release \
             -destination "generic/platform=iOS" \
@@ -50,13 +59,11 @@ jobs:
             PRODUCT_BUNDLE_IDENTIFIER="com.apple.mobile.MobileHouseArrest" \
             IPHONEOS_DEPLOYMENT_TARGET=16.0
 
-      # Debug — ดูว่ามีอะไรใน build folder
       - name: Show build output
         if: always()
         run: |
           echo "==> RUNNER_TEMP = $RUNNER_TEMP"
-          find "$RUNNER_TEMP" -maxdepth 5 -name "*.app" 2>/dev/null || echo "ไม่พบ .app"
-          find "$RUNNER_TEMP/build" -maxdepth 4 2>/dev/null || echo "ไม่พบ build folder"
+          find "$RUNNER_TEMP" -maxdepth 6 -name "*.app" 2>/dev/null || echo "ไม่พบ .app"
 
       - name: Package unsigned .ipa
         run: |
