@@ -16,11 +16,9 @@ jobs:
         with:
           submodules: recursive
 
-      # เช็ค Xcode ที่มีใน runner ก่อน
       - name: List available Xcode versions
         run: ls /Applications/ | grep Xcode
 
-      # ใช้ Xcode ล่าสุดที่มีใน runner อัตโนมัติ
       - name: Select latest Xcode
         run: |
           XCODE=$(ls /Applications/ | grep "^Xcode" | sort -V | tail -n 1)
@@ -31,8 +29,10 @@ jobs:
       - name: List schemes
         run: xcodebuild -list -project ThreeOneOSFive.xcodeproj
 
+      # Build แบบเห็น error ชัดๆ ไม่ใช้ xcpretty
       - name: Build unsigned .app
         run: |
+          set -o pipefail
           xcodebuild build \
             -project ThreeOneOSFive.xcodeproj \
             -scheme ThreeOneOSFive \
@@ -46,18 +46,22 @@ jobs:
             AD_HOC_CODE_SIGNING_ALLOWED=YES \
             ONLY_ACTIVE_ARCH=NO \
             ARCHS="arm64" \
-            VALID_ARCHS="arm64" \
             EXCLUDED_ARCHS="i386 armv7" \
             PRODUCT_BUNDLE_IDENTIFIER="com.apple.mobile.MobileHouseArrest" \
-            IPHONEOS_DEPLOYMENT_TARGET=16.0 \
-            | xcpretty || true
+            IPHONEOS_DEPLOYMENT_TARGET=16.0
+
+      # Debug — ดูว่ามีอะไรใน build folder
+      - name: Show build output
+        if: always()
+        run: |
+          echo "==> RUNNER_TEMP = $RUNNER_TEMP"
+          find "$RUNNER_TEMP" -maxdepth 5 -name "*.app" 2>/dev/null || echo "ไม่พบ .app"
+          find "$RUNNER_TEMP/build" -maxdepth 4 2>/dev/null || echo "ไม่พบ build folder"
 
       - name: Package unsigned .ipa
         run: |
           set -e
-          echo "==> หา .app bundle..."
-          find "$RUNNER_TEMP/build/Build/Products" -maxdepth 3
-          APP_PATH=$(find "$RUNNER_TEMP/build/Build/Products" -type d -name "*.app" | head -n 1)
+          APP_PATH=$(find "$RUNNER_TEMP" -type d -name "*.app" | head -n 1)
           if [ -z "$APP_PATH" ]; then
             echo "ไม่พบ .app bundle" >&2
             exit 1
@@ -69,6 +73,7 @@ jobs:
           zip -qr "3105-unsigned.ipa" "Payload"
           mkdir -p ipa_out
           mv "3105-unsigned.ipa" ipa_out/
+          echo "✅ IPA พร้อมแล้ว"
 
       - name: Upload unsigned IPA
         uses: actions/upload-artifact@v4
