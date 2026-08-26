@@ -27,13 +27,13 @@ struct RepositoryHomeView: View {
                 .padding(.top, 16)
                 .padding(.bottom, 32)
             }
-            .background(Color(uiColor: .systemGroupedBackground))
+            .background(AppTheme.pageBackground)
             .refreshable {
                 await store.refreshAllAndWait()
                 rebuildFeed()
             }
             .navigationTitle("3105")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 AppUtilityToolbar(
                     language: language,
@@ -130,7 +130,7 @@ struct RepositoryHomeView: View {
                     }
                 }
                 .background(
-                    Color(uiColor: .systemBackground),
+                    AppTheme.cardBackground,
                     in: RoundedRectangle(
                         cornerRadius: AppTheme.contentCardCornerRadius,
                         style: .continuous
@@ -145,7 +145,7 @@ struct RepositoryHomeView: View {
 
     private func sectionHeader(_ key: String) -> some View {
         Text(language.text(key))
-            .font(.title3.weight(.bold))
+            .font(.title2.weight(.bold))
             .foregroundStyle(.primary)
             .textCase(nil)
     }
@@ -170,7 +170,7 @@ struct RepositoryHomeView: View {
         .padding(.horizontal, 20)
         .padding(.vertical, 48)
         .background(
-            Color(uiColor: .systemBackground),
+            AppTheme.cardBackground,
             in: RoundedRectangle(
                 cornerRadius: AppTheme.contentCardCornerRadius,
                 style: .continuous
@@ -247,7 +247,7 @@ struct RepositoryNewView: View {
             }
             .listStyle(.insetGrouped)
             .navigationTitle(language.text("tab.new"))
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 AppUtilityToolbar(
                     language: language,
@@ -396,7 +396,7 @@ struct RepositorySearchView: View {
                 }
             }
             .navigationTitle(language.text("repository.search"))
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 AppUtilityToolbar(
                     language: language,
@@ -484,7 +484,7 @@ private struct RepositoryFeaturedCard: View {
             .shadow(color: .black.opacity(0.42), radius: 1, y: 1)
         }
         .frame(width: width, height: height, alignment: .bottomLeading)
-        .background(Color(uiColor: .secondarySystemFill))
+        .background(AppTheme.consoleBackground)
         .clipShape(
             RoundedRectangle(
                 cornerRadius: 14,
@@ -509,7 +509,7 @@ private struct RepositoryFeaturedCard: View {
 
     private var artwork: some View {
         Rectangle()
-            .fill(Color(uiColor: .secondarySystemFill))
+            .fill(AppTheme.consoleBackground)
             .overlay {
                 if let image = imageLoader.image {
                     Image(uiImage: image)
