@@ -1,16 +1,20 @@
 import SwiftUI
 
 enum AppTheme {
-    static let accent = Color(
-        uiColor: UIColor { traits in
-            traits.userInterfaceStyle == .dark
-                ? UIColor(red: 1.00, green: 0.64, blue: 0.42, alpha: 1.00)
-                : UIColor(red: 0.85, green: 0.42, blue: 0.20, alpha: 1.00)
-        }
-    )
-    static let pageBackground = Color(uiColor: .systemBackground)
-    static let consoleBackground = Color(uiColor: .secondarySystemBackground)
-    static let pageInset: CGFloat = 16
+    // Reference UI palette: soft iOS grouped background, white cards, black type.
+    static let accent = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark ? .white : .black
+    })
+    static let danger = Color(red: 0.886, green: 0.278, blue: 0.306)
+    static let pageBackground = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 0.075, green: 0.075, blue: 0.09, alpha: 1)
+            : UIColor(red: 0.949, green: 0.945, blue: 0.969, alpha: 1)
+    })
+    static let cardBackground = Color(uiColor: .systemBackground)
+    static let divider = Color(uiColor: .separator).opacity(0.45)
+    static let consoleBackground = Color(uiColor: .secondarySystemGroupedBackground)
+    static let pageInset: CGFloat = 20
     static let rowIconSize: CGFloat = 17
     static let rowIconFrame: CGFloat = 28
     static let fileRowIconSize: CGFloat = 17
@@ -20,8 +24,8 @@ enum AppTheme {
     static let emptyIconSize: CGFloat = 30
     static let selectionIconSize: CGFloat = 18
     static let contentCardCornerRadius: CGFloat = 20
-    static let contentCardInset: CGFloat = 16
-    static let contentCardPadding: CGFloat = 16
+    static let contentCardInset: CGFloat = 20
+    static let contentCardPadding: CGFloat = 18
 }
 
 struct AppCardBorder: View {
@@ -90,8 +94,8 @@ struct AppSearchField: View {
         .padding(.horizontal, 11)
         .frame(minHeight: 36)
         .background(
-            Color(uiColor: .secondarySystemFill),
-            in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+            AppTheme.cardBackground,
+            in: RoundedRectangle(cornerRadius: 18, style: .continuous)
         )
         .padding(.horizontal, AppTheme.pageInset)
         .padding(.vertical, 8)
@@ -120,6 +124,7 @@ struct AppLogo: View {
         }
         .frame(width: size, height: size)
         .clipShape(RoundedRectangle(cornerRadius: size * 0.22, style: .continuous))
+        .shadow(color: .black.opacity(0.12), radius: 10, y: 4)
         .accessibilityHidden(true)
     }
 }
