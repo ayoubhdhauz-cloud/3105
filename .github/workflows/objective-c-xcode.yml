@@ -1,0 +1,69 @@
+name: Build 3105 Unsigned IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.4.app
+
+      - name: List schemes
+        run: xcodebuild -list -project ThreeOneOSFive.xcodeproj
+
+      - name: Build unsigned .app
+        run: |
+          xcodebuild build \
+            -project ThreeOneOSFive.xcodeproj \
+            -scheme ThreeOneOSFive \
+            -sdk iphoneos \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -derivedDataPath "$RUNNER_TEMP/build" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            AD_HOC_CODE_SIGNING_ALLOWED=YES \
+            ONLY_ACTIVE_ARCH=NO \
+            ARCHS="arm64" \
+            VALID_ARCHS="arm64" \
+            EXCLUDED_ARCHS="i386 armv7" \
+            PRODUCT_BUNDLE_IDENTIFIER="com.apple.mobile.MobileHouseArrest" \
+            IPHONEOS_DEPLOYMENT_TARGET=16.0 \
+            | xcpretty || true
+
+      - name: Package unsigned .ipa
+        run: |
+          set -e
+          echo "==> หา .app bundle..."
+          find "$RUNNER_TEMP/build/Build/Products" -maxdepth 3
+          APP_PATH=$(find "$RUNNER_TEMP/build/Build/Products" -type d -name "*.app" | head -n 1)
+          if [ -z "$APP_PATH" ]; then
+            echo "ไม่พบ .app bundle" >&2
+            exit 1
+          fi
+          echo "พบ: $APP_PATH"
+          mkdir -p "$RUNNER_TEMP/Payload"
+          cp -R "$APP_PATH" "$RUNNER_TEMP/Payload/"
+          cd "$RUNNER_TEMP"
+          zip -qr "3105-unsigned.ipa" "Payload"
+          mkdir -p ipa_out
+          mv "3105-unsigned.ipa" ipa_out/
+
+      - name: Upload unsigned IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: 3105-unsigned-ipa
+          path: ${{ runner.temp }}/ipa_out/3105-unsigned.ipa
+          retention-days: 7
