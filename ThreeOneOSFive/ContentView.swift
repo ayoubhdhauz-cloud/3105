@@ -70,18 +70,23 @@ struct ContentView: View {
     }
 
     private var compactLayout: some View {
-        TabView(selection: tabSelection) {
-            ForEach(featureVisibility.visibleSections) { section in
-                sectionContent(section)
-                    .tabItem {
-                        CompactTabLabel(
-                            title: language.text(section.titleKey),
-                            systemImage: section.systemImage
-                        )
-                    }
-                    .tag(section.rawValue)
-            }
+        ZStack(alignment: .bottom) {
+            sectionContent(selectedVisibleSection)
+                .id(selectedVisibleSection.rawValue)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    Color.clear.frame(height: 78)
+                }
+
+            CompactFloatingTabBar(
+                sections: featureVisibility.visibleSections,
+                selection: tabSelection
+            )
+            .padding(.horizontal, 18)
+            .padding(.bottom, 8)
         }
+        .background(AppTheme.pageBackground.ignoresSafeArea())
+        .ignoresSafeArea(.keyboard, edges: .bottom)
     }
 
     private var regularLayout: some View {
@@ -109,6 +114,9 @@ struct ContentView: View {
                     )
                 }
             }
+            .listStyle(.sidebar)
+            .scrollContentBackground(.hidden)
+            .background(AppTheme.pageBackground)
             .navigationTitle("3105")
             .navigationSplitViewColumnWidth(min: 210, ideal: 240, max: 300)
         } detail: {
@@ -196,6 +204,50 @@ struct ContentView: View {
 
     private func openLogs() {
         showLogs = true
+    }
+}
+
+private struct CompactFloatingTabBar: View {
+    let sections: [AppSection]
+    @Binding var selection: Int
+    @Environment(\.appLanguage) private var language
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(sections) { section in
+                let isSelected = section.rawValue == selection
+                Button {
+                    withAnimation(.easeInOut(duration: 0.18)) {
+                        selection = section.rawValue
+                    }
+                } label: {
+                    VStack(spacing: 3) {
+                        Image(systemName: section.systemImage)
+                            .font(.system(size: 17, weight: isSelected ? .semibold : .medium))
+                        Text(language.text(section.titleKey))
+                            .font(.caption2.weight(.semibold))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.72)
+                    }
+                    .foregroundStyle(isSelected ? .primary : .secondary)
+                    .frame(maxWidth: .infinity, minHeight: 52)
+                    .contentShape(Capsule())
+                    .background(
+                        isSelected ? AppTheme.cardBackground : Color.clear,
+                        in: Capsule()
+                    )
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(isSelected ? .isSelected : [])
+            }
+        }
+        .padding(5)
+        .background(.ultraThinMaterial, in: Capsule())
+        .overlay {
+            Capsule()
+                .stroke(Color.white.opacity(0.72), lineWidth: 0.8)
+        }
+        .shadow(color: .black.opacity(0.16), radius: 18, y: 8)
     }
 }
 
