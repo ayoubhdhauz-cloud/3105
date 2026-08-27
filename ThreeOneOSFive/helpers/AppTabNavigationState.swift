@@ -1,12 +1,14 @@
 import Foundation
 
 enum AppSection: Int, CaseIterable, Identifiable {
-    case home
-    case new
-    case sources
-    case installed
-    case files
-    case search
+    case features   // 0 — หน้า Features (ใหม่)
+    case home       // 1
+    case new        // 2
+    case sources    // 3
+    case installed  // 4
+    case files      // 5
+    case search     // 6
+    case account    // 7 — หน้า Account (ใหม่)
 
     var id: Int { rawValue }
 }
@@ -14,17 +16,14 @@ enum AppSection: Int, CaseIterable, Identifiable {
 enum WallpaperFeatureSupportPolicy {
     static func isSupported(major: Int) -> Bool {
         switch major {
-        case 17, 18, 26, 27:
-            return true
-        default:
-            return false
+        case 17, 18, 26, 27: return true
+        default: return false
         }
     }
 }
 
 struct OneShotPresentationGate: Equatable {
     private(set) var hasClaimed = false
-
     mutating func claim() -> Bool {
         guard !hasClaimed else { return false }
         hasClaimed = true
@@ -70,9 +69,7 @@ struct AppTabNavigationState: Equatable {
         filesTabs = session
     }
 
-    mutating func select(_ tab: Int) {
-        selectedTab = tab
-    }
+    mutating func select(_ tab: Int) { selectedTab = tab }
 
     mutating func setFilesNavigationPath(_ path: [FileBrowserDestination]) {
         filesTabs.setActiveNavigationPath(path)
@@ -89,7 +86,7 @@ struct AppTabNavigationState: Equatable {
     mutating func reconcileSelection(with visibility: FeatureVisibility) {
         guard let selectedSection = AppSection(rawValue: selectedTab),
               visibility.isVisible(selectedSection) else {
-            selectedTab = AppSection.home.rawValue
+            selectedTab = AppSection.features.rawValue
             return
         }
     }
@@ -111,9 +108,7 @@ struct FilesTabState: Identifiable, Equatable {
         customTitle ?? navigationPath.last?.title ?? defaultTitle
     }
 
-    var currentPath: String? {
-        navigationPath.last?.startPath
-    }
+    var currentPath: String? { navigationPath.last?.startPath }
 }
 
 struct FilesTabSession: Equatable {
@@ -125,9 +120,7 @@ struct FilesTabSession: Equatable {
         selectedTabID = initialTabID
     }
 
-    var activeTab: FilesTabState? {
-        tabs.first { $0.id == selectedTabID }
-    }
+    var activeTab: FilesTabState? { tabs.first { $0.id == selectedTabID } }
 
     func navigationPath(for id: UUID) -> [FileBrowserDestination] {
         tabs.first { $0.id == id }?.navigationPath ?? []
@@ -142,10 +135,7 @@ struct FilesTabSession: Equatable {
         setNavigationPath(path, for: selectedTabID)
     }
 
-    mutating func openTab(
-        id: UUID = UUID(),
-        navigationPath: [FileBrowserDestination] = []
-    ) {
+    mutating func openTab(id: UUID = UUID(), navigationPath: [FileBrowserDestination] = []) {
         tabs.append(FilesTabState(id: id, customTitle: nil, navigationPath: navigationPath))
         selectedTabID = id
     }
@@ -168,7 +158,6 @@ struct FilesTabSession: Equatable {
             selectedTabID = replacementID
             return
         }
-
         tabs.remove(at: index)
         if selectedTabID == id {
             selectedTabID = tabs[min(index, tabs.count - 1)].id
